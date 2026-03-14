@@ -26,7 +26,6 @@ function sync_reservations(DateTime $from, DateTime $to) {
 
 }
 
-
 function update_reservation($reservation_id) {
 
     log_event("INFO", "Starting update for reservation $reservation_id");
@@ -40,7 +39,7 @@ function update_reservation($reservation_id) {
         return;
     }
 
-    $local = db_select("SELECT * FROM reservations WHERE hs_reservation_id = ?", [$reservation_id]);
+    $local = fetch_db_reservation($reservation_id);
 
     $exists = !empty($local);
     $local_data = $exists ? $local[0] : null;
@@ -78,6 +77,10 @@ function update_reservation($reservation_id) {
     } else {
         log_event("INFO", "No changes for reservation $reservation_id");
     }
+}
+
+function fetch_db_reservation($reservation_id) {
+    return db_select("SELECT * FROM reservations WHERE hs_reservation_id = ?", [$reservation_id]);
 }
 
 function get_LOCK_id($reservation){
@@ -142,6 +145,5 @@ function upsert_reservation_rooms_and_plans($id_reservations, $rate_plan_id, $ro
         "reservation_id"
     );
 }
-
 
 ?>

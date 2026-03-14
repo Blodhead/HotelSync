@@ -58,6 +58,28 @@ CREATE TABLE audit_log (
 );
 
 -- =========================
+-- INVOICE QUEUE
+-- =========================
+CREATE TABLE invoice_queue (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    reservation_id INT NOT NULL,
+    invoice_number VARCHAR(50) NOT NULL UNIQUE,
+    payload JSON NOT NULL,
+    status ENUM('pending', 'sent', 'failed') DEFAULT 'pending',
+    retry_count INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- =========================
+-- INVOICE COUNTERS
+-- =========================
+CREATE TABLE invoice_counters (
+    year INT PRIMARY KEY,
+    last_number INT DEFAULT 0
+);
+
+-- =========================
 -- RESERVATION ROOMS (many-to-many)
 -- =========================
 CREATE TABLE reservation_rooms (

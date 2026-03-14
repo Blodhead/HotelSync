@@ -2,22 +2,10 @@
 
 require_once __DIR__ . "/../config/database.php";
 
-/*function db() {
-    static $conn;
-
-    if (!$conn) {
-        $conn = mysqli_connect($DB_HOST, $DB_USER, $DB_PASS, $DB_NAME);
-    }
-
-    return $conn;
-}*/
-
 function db() {
 
-    // Create connection
     $conn = mysqli_connect(DB_HOST, DB_USER, DB_PASS, DB_NAME);
 
-    // Check connection
     if (!$conn) {
     die("Connection failed: " . mysqli_connect_error());
     }
