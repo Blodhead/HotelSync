@@ -69,4 +69,25 @@ function hs_get_rate_plans() {
         "token" => HS_API_TOKEN
     ]);
 }
+
+function hs_get_reservations(DateTime $from, DateTime $to, int $page = 1) {
+    return hs_request("reservation/data/reservations", "POST", [
+        "id_properties" => PROPERTY_ID,
+        "key" => HS_API_KEY,
+        "token" => HS_API_TOKEN,
+        "channels"=> [],
+        "countries"=> [],
+        "order_by"=> "date_received",
+        "rooms"=> [],
+        "dfrom"=> $from->format('Y-m-d'),
+        "dto"=> $to->format('Y-m-d'),
+        "filter_by"=> "date_received",
+        "order_type"=> "desc",
+        "page"=> $page,
+        "show_nights"=> 1,
+        "show_rooms"=> 1,
+        "view_type"=> "reservations"
+    ]);
+}
+
 ?>
