@@ -1,6 +1,5 @@
 <?php
 
-
 function hs_request($endpoint, $method = "GET", $payload = null) {
 
     $token = HS_API_TOKEN;
@@ -87,6 +86,15 @@ function hs_get_reservations(DateTime $from, DateTime $to, int $page = 1) {
         "show_nights"=> 1,
         "show_rooms"=> 1,
         "view_type"=> "reservations"
+    ]);
+}
+
+function hs_get_reservation($reservation_id) {
+    return hs_request("reservation/data/reservation", "POST", [
+        "id_properties" => PROPERTY_ID,
+        "key" => HS_API_KEY,
+        "token" => HS_API_TOKEN,
+        "id_reservations" => $reservation_id
     ]);
 }
 

@@ -26,11 +26,67 @@ function sync_reservations(DateTime $from, DateTime $to) {
 
 }
 
+
+function update_reservation($reservation_id) {
+
+    log_event("INFO", "Starting update for reservation $reservation_id");
+
+    $reservation = hs_get_reservation($reservation_id);
+
+    log_event("INFO", "API reservation fetch response successful");
+
+    if (!$reservation || isset($reservation["error"])) {
+        log_event("ERROR", "Failed to fetch reservation $reservation_id from API");
+        return;
+    }
+
+    $local = db_select("SELECT * FROM reservations WHERE hs_reservation_id = ?", [$reservation_id]);
+
+    $exists = !empty($local);
+    $local_data = $exists ? $local[0] : null;
+
+    $new_hash = hash("sha256", json_encode($reservation));
+    $old_hash = $exists ? $local_data["payload_hash"] : null;
+
+    $changed = !$exists || $new_hash !== $old_hash;
+
+    if ($changed) {
+
+        upsert_reservations(            
+            $reservation["id_reservations"],
+            $reservation["first_name"] . " " . $reservation["last_name"],
+            $reservation["date_arrival"],
+            $reservation["date_departure"],
+            $reservation["status"],
+            $new_hash,
+            get_LOCK_id($reservation)
+        );
+        //process_reservations($reservation);
+
+        $action = $exists ? "update" : "insert";
+        $details = $exists ? "Status changed to " . $reservation["status"] : "New reservation inserted";
+
+        db_upsert("audit_log", [
+            "reservation_id" => $reservation_id,
+            "action" => $action,
+            "old_hash" => $old_hash,
+            "new_hash" => $new_hash,
+            "details" => $details
+        ], null);
+
+        log_event("INFO", "Reservation $reservation_id $action successful");
+    } else {
+        log_event("INFO", "No changes for reservation $reservation_id");
+    }
+}
+
+function get_LOCK_id($reservation){
+    return "LOCK-" . $reservation["id_pricing_plans"] . "-" . $reservation["date_arrival"];
+}
+
 function process_reservations($reservations) {
 
     foreach ($reservations as $reservation) {
-
-        $lock_id = "LOCK-" . $reservation["id_pricing_plans"] . "-" . $reservation["date_arrival"];    
 
         $payload_hash = hash("sha256", json_encode($reservation));
 
@@ -41,7 +97,7 @@ function process_reservations($reservations) {
             $reservation["date_departure"],
             $reservation["status"],
             $payload_hash,
-            $lock_id
+            get_LOCK_id($reservation)
         );
 
         foreach ($reservation["rooms"] as $room) {
@@ -86,5 +142,6 @@ function upsert_reservation_rooms_and_plans($id_reservations, $rate_plan_id, $ro
         "reservation_id"
     );
 }
+
 
 ?>

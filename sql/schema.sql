@@ -45,6 +45,19 @@ CREATE TABLE reservations (
 );
 
 -- =========================
+-- AUDIT LOG
+-- =========================
+CREATE TABLE audit_log (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    reservation_id INT NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    old_hash VARCHAR(64),
+    new_hash VARCHAR(64),
+    details TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =========================
 -- RESERVATION ROOMS (many-to-many)
 -- =========================
 CREATE TABLE reservation_rooms (
@@ -65,18 +78,6 @@ CREATE TABLE reservation_rate_plans (
     rate_plan_id INT NOT NULL,
     FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE CASCADE,
     FOREIGN KEY (rate_plan_id) REFERENCES rate_plans(id) ON DELETE CASCADE
-);
-
--- =========================
--- AUDIT LOG
--- =========================
-CREATE TABLE audit_log (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    reservation_id INT,
-    event_type VARCHAR(100),
-    description TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_reservation (reservation_id)
 );
 
 -- =========================

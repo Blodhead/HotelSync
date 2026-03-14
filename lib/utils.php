@@ -33,4 +33,22 @@ function db_upsert($table, $data, $uniqueKey) {
     mysqli_stmt_execute($stmt);
 }
 
+function db_select($query, $params = []) {
+    $db = db();
+    $stmt = mysqli_prepare($db, $query);
+    if (!$stmt) {
+        log_event("ERROR", "Failed to prepare select statement: " . mysqli_error($db));
+        return false;
+    }
+    if (!empty($params)) {
+        $types = str_repeat("s", count($params));
+        mysqli_stmt_bind_param($stmt, $types, ...$params);
+    }
+    mysqli_stmt_execute($stmt);
+    $result = mysqli_stmt_get_result($stmt);
+    $rows = mysqli_fetch_all($result, MYSQLI_ASSOC);
+    mysqli_stmt_close($stmt);
+    return $rows;
+}
+
 ?>
