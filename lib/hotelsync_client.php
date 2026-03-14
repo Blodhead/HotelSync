@@ -1,26 +1,43 @@
 <?php
+
+
 function hs_request($endpoint, $method = "GET", $payload = null) {
 
-    $token = HS_TOKEN;
+    $token = HS_API_TOKEN;
 
     $ch = curl_init(); //curl handler
-
-    //setting curl options
-    curl_setopt($ch, CURLOPT_URL, HS_BASE_URL . $endpoint); //curl endpoint
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true); //return response as string
 
     //curl headers definition
     $headers = [
         "Authorization: Bearer $token",
         "Content-Type: application/json",
     ];
+    
+    //common curl options for all requests
+    $options = [
+        CURLOPT_URL => HS_BASE_URL . $endpoint,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_HTTPHEADER => $headers,
+        CURLOPT_TIMEOUT => 30
+    ];
 
-    curl_setopt($ch, CURLOPT_HTTPHEADER, $headers); //curl headers
-
+    //setting curl options based on the request method
     if ($method === "POST") {
-        curl_setopt($ch, CURLOPT_POST, true);   //by default curl is set to GET, so we need to set it to POST if that's the method
-        curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($payload)); //set the payload for POST requests, encoding it as JSON
+        $options[CURLOPT_POST] = true;
+        $options[CURLOPT_POSTFIELDS] = json_encode($payload);
+    } elseif ($method === "PUT") {
+        $options[CURLOPT_CUSTOMREQUEST] = "PUT";
+        $options[CURLOPT_POSTFIELDS] = json_encode($payload);
+    } elseif ($method === "GET" && $payload) {
+        $options[CURLOPT_URL] .= '?' . http_build_query($payload);
+    } elseif ($method === "DELETE") {
+        $options[CURLOPT_CUSTOMREQUEST] = "DELETE";
+        $options[CURLOPT_POSTFIELDS] = json_encode($payload);
     }
+
+    //setting curl options
+    curl_setopt_array($ch, $options); //set multiple curl options at once
+
 
     $response = curl_exec($ch); //execute the request and store the response
 
@@ -31,5 +48,25 @@ function hs_request($endpoint, $method = "GET", $payload = null) {
     curl_close($ch); // close the curl handler //depricated in PHP 8.0, but still works for backward compatibility
 
     return json_decode($response, true); //decode the JSON response into an associative array and return it
+}
+
+//if id_properties, token and key keep repeating, we can create helper functions to make it cleaner and more reusable
+
+function hs_get_rooms() {
+    return hs_request("room/data/rooms", "POST", [
+        "id_properties" => PROPERTY_ID,
+        "token" => HS_API_TOKEN,
+        "key" => HS_API_KEY,
+        "type"=> 1,
+        "details"=> "0"
+    ]);
+}
+
+function hs_get_rate_plans() {
+    return hs_request("pricingPlan/data/pricing_plans", "POST", [
+        "id_properties" => PROPERTY_ID,
+        "key" => HS_API_KEY,
+        "token" => HS_API_TOKEN
+    ]);
 }
 ?>

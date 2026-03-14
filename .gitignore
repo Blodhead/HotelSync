@@ -1,4 +1,4 @@
 node_modules/php/README.md
 config/env.php
 config/database.php
-config/database.php
+logs/app.log
