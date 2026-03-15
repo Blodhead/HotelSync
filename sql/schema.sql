@@ -116,29 +116,13 @@ CREATE TABLE reservation_rate_plans (
 );
 
 -- =========================
--- INVOICE QUEUE
--- =========================
-CREATE TABLE invoice_queue (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    invoice_number VARCHAR(50) UNIQUE,
-    reservation_id INT,
-    payload JSON,
-    status VARCHAR(50) DEFAULT 'pending',
-    retry_count INT DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE SET NULL
-);
-
-
--- =========================
 -- INVOICE COUNTER (for safe numbering)
 -- =========================
 CREATE TABLE invoice_counter (
     year INT PRIMARY KEY,
     last_number INT NOT NULL
 );
-
+/*
 -- =========================
 -- ROOMS
 -- =========================
@@ -263,4 +247,4 @@ INSERT INTO webhook_events (event_type, payload_hash, payload, processed) VALUES
 ('reservation_created', 'whash7', '{"reservation_id":3008}', 0),
 ('reservation_updated', 'whash8', '{"reservation_id":3009}', 0),
 ('reservation_created', 'whash9', '{"reservation_id":3010}', 0),
-('reservation_updated', 'whash10', '{"reservation_id":3004}', 1);
+('reservation_updated', 'whash10', '{"reservation_id":3004}', 1);*/

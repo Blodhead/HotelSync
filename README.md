@@ -12,6 +12,7 @@
 
 ## Database setup
 Take schema.sql and copy-paste-execute in SQL management tool of choice
+Note: database.php and env.php were in .gitignore but added in final commit for this interview
 
 ## Task 1 – Authentication i Catalog Sync
 run "php sync_catalog.php" in CLI
