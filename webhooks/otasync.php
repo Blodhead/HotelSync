@@ -3,6 +3,7 @@
 require_once __DIR__ . "/../config/env.php";
 require_once __DIR__ . "/../lib/utils.php";
 require_once __DIR__ . "/../lib/logger.php";
+require_once __DIR__ . "/../services/reservation_service.php";
 
 [$payload, $raw_payload] = is_request_ok();
 //list($payload, $raw_payload) = is_request_ok(); backwards compatibility
@@ -15,14 +16,28 @@ $payload_hash = hash('sha256', $raw_payload);
 
 is_webhook_event_not_processed($event_id);
 
-db_upsert("webhook_events", [
-    "event_id" => $event_id,
-    "payload_hash" => $payload_hash,
-    "payload" => $raw_payload,
-    "status" => "pending"
-], null);
+upsert_webhook_event($event_id, "pending", null, $payload_hash, $raw_payload);
 
-//proccess webhook event
+try {
+
+    process_webhook_reservation_event($type, $reservation_data);
+
+    upsert_webhook_event($event_id, "processed", date('Y-m-d H:i:s'));
+
+    log_event("INFO", "Webhook event $event_id processed successfully");
+    http_response_code(200);
+    echo json_encode(['status' => 'processed']);
+
+} catch (Exception $e) {
+
+    upsert_webhook_event($event_id, "failed");
+
+    log_event("ERROR", "Failed to process webhook event $event_id: " . $e->getMessage());
+    http_response_code(500);
+    echo json_encode(['error' => 'Processing failed']);
+
+}
+
 
 function is_request_ok() {
 
@@ -69,6 +84,57 @@ function is_webhook_event_not_processed($event_id) {
 
 function get_webhook_event_by_id($event_id) {
     return db_select("SELECT id FROM webhook_events WHERE event_id = ?", [$event_id]);
+}
+
+function upsert_webhook_event($event_id, $status, $processed_at = null, $payload_hash = null, $payload = null) {
+    $data = ["event_id" => $event_id, "status" => $status];
+    if ($processed_at) $data["processed_at"] = $processed_at;
+    if ($payload_hash) $data["payload_hash"] = $payload_hash;
+    if ($payload) $data["payload"] = $payload;
+    $unique_key = $payload_hash ? null : "event_id";
+    db_upsert("webhook_events", $data, $unique_key);
+}
+
+function process_webhook_reservation_event($type, $reservation) {
+
+    $reservation_id = $reservation['id_reservations'];
+
+    upsert_reservations($reservation_id, 
+    ($reservation['first_name'] ?? '') . ' ' . ($reservation['last_name'] ?? ''),
+    $reservation['date_arrival'] ?? null,
+    $reservation['date_departure'] ?? null,
+    $reservation['status'] ?? 'confirmed',
+    hash('sha256', json_encode($reservation)),
+    "LOCK-" . ($reservation['id_pricing_plans'] ?? '') . "-" . ($reservation['date_arrival'] ?? '')
+    );
+
+    if ($type === 'new') {
+
+        db_upsert("audit_log", [
+            "reservation_id" => $reservation_id,
+            "action" => "webhook_new",
+            "details" => "New reservation via webhook"
+        ], null);
+
+    } elseif ($type === 'update') {
+
+        db_upsert("audit_log", [
+            "reservation_id" => $reservation_id,
+            "action" => "webhook_update",
+            "details" => "Reservation updated via webhook"
+        ], null);
+
+    } elseif ($type === 'cancel') {
+
+        db_upsert("audit_log", [
+            "reservation_id" => $reservation_id,
+            "action" => "webhook_cancel",
+            "details" => "Reservation canceled via webhook"
+        ], null);
+        
+    } else {
+        throw new Exception("Unknown event type: $type");
+    }
 }
 
 ?>
