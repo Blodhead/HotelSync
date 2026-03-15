@@ -80,6 +80,19 @@ CREATE TABLE invoice_counters (
 );
 
 -- =========================
+-- WEBHOOK EVENTS
+-- =========================
+CREATE TABLE webhook_events (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    event_id VARCHAR(255) UNIQUE,
+    payload_hash VARCHAR(64) UNIQUE,
+    payload JSON NOT NULL,
+    status ENUM('pending', 'processed', 'failed') DEFAULT 'pending',
+    processed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- =========================
 -- RESERVATION ROOMS (many-to-many)
 -- =========================
 CREATE TABLE reservation_rooms (
@@ -117,18 +130,6 @@ CREATE TABLE invoice_queue (
     FOREIGN KEY (reservation_id) REFERENCES reservations(id) ON DELETE SET NULL
 );
 
--- =========================
--- WEBHOOK EVENTS
--- =========================
-CREATE TABLE webhook_events (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    event_type VARCHAR(100),
-    payload_hash VARCHAR(64),
-    payload JSON,
-    processed BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE KEY unique_webhook (payload_hash)
-);
 
 -- =========================
 -- INVOICE COUNTER (for safe numbering)

@@ -27,7 +27,7 @@ function process_invoice($reservation) {
     $reservation_id = $reservation["hs_reservation_id"];
     $year = date('Y');
 
-    $new_number = process_invoice_queue($reservation, $year);
+    $new_number = process_invoice_queue($year);
 
     //$invoice_number = "HS-INV-" . $year . "-" . str_pad($new_number, 6, '0', STR_PAD_LEFT);
     $invoice_number = sprintf("HS-INV-%d-%06d", $year, $new_number);
@@ -70,7 +70,7 @@ function process_invoice($reservation) {
 
 }
 
-function process_invoice_queue($reservation, $year) {
+function process_invoice_queue($year) {
 
     $db = db();
     

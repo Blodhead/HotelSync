@@ -31,6 +31,8 @@ function db_upsert($table, $data, $uniqueKey) {
     mysqli_stmt_bind_param($stmt, $types, ...$values);
 
     mysqli_stmt_execute($stmt);
+
+    mysqli_stmt_close($stmt);
 }
 
 function db_select($query, $params = []) {
