@@ -6,7 +6,7 @@
 - Any SQL client / SQL management tool
 
 ## Used
-- XAMP that comes with PHP 8.0.30
+- XAMPP that comes with PHP 8.0.30
 - Postman
 - MySQL Workbench
 

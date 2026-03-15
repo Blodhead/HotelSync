@@ -26,7 +26,7 @@ function db_upsert($table, $data, $uniqueKey) {
 
     $stmt = mysqli_prepare($db, $sql);
 
-    $types = str_repeat("s", count($values)); // simplified typing
+    $types = str_repeat("s", count($values));
 
     mysqli_stmt_bind_param($stmt, $types, ...$values);
 

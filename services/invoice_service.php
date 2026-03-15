@@ -9,7 +9,6 @@ require_once __DIR__ . "/../services/reservation_service.php";
 function generate_invoice($reservation_id) {
     log_event("INFO", "Starting invoice generation for reservation $reservation_id");
 
-    // Fetch reservation from DB
     $local = fetch_db_reservation($reservation_id);
 
     if (empty($local)) {
